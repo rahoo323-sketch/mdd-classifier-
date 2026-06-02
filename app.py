@@ -142,7 +142,18 @@ def model_status():
     status = {}
     for m in models:
         path = os.path.join(MODEL_FOLDER, f"deprescan_{m}.pkl")
-        status[m] = os.path.exists(path)
+        if os.path.exists(path):
+            try:
+                pkg = joblib.load(path)
+                status[m] = {
+                    "available": True,
+                    "auc": pkg.get("auc", "—"),
+                    "acc": pkg.get("accuracy", "—")
+                }
+            except:
+                status[m] = {"available": False}
+        else:
+            status[m] = {"available": False}
     return jsonify(status)
 
 if __name__ == "__main__":
