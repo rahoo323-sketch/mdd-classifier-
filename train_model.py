@@ -143,14 +143,13 @@ def train_and_save(filepath,model_name="svm",output_dir="model"):
     X=X_filt.T
     print(f"      {X.shape[1]} probes kept")
 
-    print("[3/9] Stratified 80/20 split (no data leakage)")
+    print("[3/9] Stratified 80/20 split - no data leakage")
     train_idx,test_idx=stratified_split(X,y,test_size=0.2)
     Xtr,ytr=X[train_idx],y[train_idx]
     Xte,yte=X[test_idx],y[test_idx]
-    print(f"      Train: {len(train_idx)} · Test (unseen): {len(test_idx)}")
-    print(f"      Test MDD: {yte.sum()} · Test Control: {(yte==0).sum()}")
+    print(f"      Train: {len(train_idx)} · Test unseen: {len(test_idx)}")
 
-    print("[4/9] Normalizing (fit on train only)")
+    print("[4/9] Normalizing - fit on train only")
     sc=StandardScaler();Xtr_s=sc.fit_transform(Xtr);Xte_s=sc.transform(Xte)
 
     print("[5/9] Feature selection on TRAIN only")
@@ -186,7 +185,7 @@ def train_and_save(filepath,model_name="svm",output_dir="model"):
         else:yb=ytr
     else:yb=ytr
 
-    print("[8/9] PCA (fit on train only)")
+    print("[8/9] PCA - fit on train only")
     pf=PCA(random_state=1);pf.fit(Xtr_sel)
     cv=np.cumsum(pf.explained_variance_ratio_)
     nc=int(np.searchsorted(cv,VARIANCE_PCT))+1
@@ -200,7 +199,6 @@ def train_and_save(filepath,model_name="svm",output_dir="model"):
     clf=build_classifier(model_name)
     clf.fit(Xtr_pca,yb)
 
-    # ── HONEST METRICS on held-out test set ──
     preds=clf.predict(Xte_pca)
     proba=clf.predict_proba(Xte_pca)
     classes=clf.classes_
@@ -211,18 +209,17 @@ def train_and_save(filepath,model_name="svm",output_dir="model"):
     sens=round(tp/(tp+fn) if (tp+fn)>0 else 0,3)
     spec=round(tn/(tn+fp) if (tn+fp)>0 else 0,3)
 
-    print(f"\n{'='*45}")
-    print(f"  HONEST METRICS (evaluated on unseen 20%)")
-    print(f"{'='*45}")
+    print(f"\n=============================================")
+    print(f"  HONEST METRICS - evaluated on unseen 20%")
+    print(f"=============================================")
     print(f"  AUC:         {auc}")
     print(f"  Accuracy:    {acc}")
     print(f"  Sensitivity: {sens}")
     print(f"  Specificity: {spec}")
-    print(f"  Test samples:{len(yte)} ({yte.sum()} MDD · {(yte==0).sum()} Control)")
-    print(f"{'='*45}\n")
+    print(f"  Test samples:{len(yte)}")
+    print(f"=============================================\n")
 
-    # ── RETRAIN ON ALL DATA for strongest final model ──
-    print("Retraining final model on ALL data for deployment...")
+    print("Retraining final model on ALL data...")
     sc_final=StandardScaler();X_all_s=sc_final.fit_transform(X)
     X_all_sel=X_all_s[:,cidx]
     n0a,n1a=np.sum(y==0),np.sum(y==1)
@@ -256,7 +253,7 @@ def train_and_save(filepath,model_name="svm",output_dir="model"):
     print(f"Model saved: {out}")
     return out
 
-if __name__=="__main__":
+if __name__ == "__main__":
     p=argparse.ArgumentParser()
     p.add_argument("--file",required=True)
     p.add_argument("--model",default="svm",choices=["svm","rf","logistic","boosting"])
