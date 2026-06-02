@@ -11,9 +11,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import roc_auc_score,accuracy_score,confusion_matrix
 import joblib
 warnings.filterwarnings("ignore")
-
-TOP_K_GENES=5000;TOP_K_MRMR=200;TOP_K_RF=100;TOP_K_SVM=150
-N_TREES=300;NUM_BOOT=20;STAB_THRESH=0.15;MAX_FINAL=25;VARIANCE_PCT=0.95
+TOP_K_GENES=5000;TOP_K_MRMR=200;TOP_K_RF=100;TOP_K_SVM=150;N_TREES=300;NUM_BOOT=20;STAB_THRESH=0.15;MAX_FINAL=25;VARIANCE_PCT=0.95
 
 def parse_geo_matrix(filepath):
     with open(filepath,"r",encoding="utf-8",errors="replace") as fh:
@@ -103,7 +101,8 @@ def stability(Xt,yt,gnames,nb=NUM_BOOT,top=50):
             rf.fit(Xb,yb);o=np.argsort(rf.feature_importances_)[::-1][:top]
             for i in o:
                 if i<len(gnames):counts[gnames[i]]=counts.get(gnames[i],0)+1
-        except:pass
+        except:
+            pass
     return {g:counts[g]/nb for g in gnames}
 
 def smote(Xm,n,k=5):
@@ -113,16 +112,6 @@ def smote(Xm,n,k=5):
         a=np.random.rand();out.append(Xm[i]+a*(Xm[j]-Xm[i]))
     return np.array(out)
 
-def stratified_split(X,y,test_size=0.2,random_state=42):
-    np.random.seed(random_state)
-    idx0=np.where(y==0)[0];idx1=np.where(y==1)[0]
-    np.random.shuffle(idx0);np.random.shuffle(idx1)
-    n0_test=max(1,int(len(idx0)*test_size))
-    n1_test=max(1,int(len(idx1)*test_size))
-    test_idx=np.concatenate([idx0[:n0_test],idx1[:n1_test]])
-    train_idx=np.concatenate([idx0[n0_test:],idx1[n1_test:]])
-    return train_idx,test_idx
-
 def build_classifier(model_name):
     if model_name=="svm":return SVC(kernel="linear",probability=True,random_state=1)
     elif model_name=="rf":return RandomForestClassifier(n_estimators=200,random_state=1,n_jobs=-1)
@@ -131,123 +120,62 @@ def build_classifier(model_name):
 
 def train_and_save(filepath,model_name="svm",output_dir="model"):
     os.makedirs(output_dir,exist_ok=True)
-
-    print(f"[1/9] Parsing {filepath}")
+    print(f"[1/8] Parsing {filepath}")
     X_raw,probe_ids,y=parse_geo_matrix(filepath)
     valid=y!=-1;X_raw=X_raw[:,valid];y=y[valid]
     print(f"      {X_raw.shape[0]} probes x {X_raw.shape[1]} samples")
     print(f"      {y.sum()} MDD · {(y==0).sum()} Control")
-
-    print("[2/9] Log2 + variance filter")
+    print("[2/8] Log2 + variance filter")
     X_log=log2t(X_raw);X_filt,gnames=var_filter(X_log,probe_ids)
     X=X_filt.T
     print(f"      {X.shape[1]} probes kept")
-
-    print("[3/9] Stratified 80/20 split - no data leakage")
-    train_idx,test_idx=stratified_split(X,y,test_size=0.2)
-    Xtr,ytr=X[train_idx],y[train_idx]
-    Xte,yte=X[test_idx],y[test_idx]
-    print(f"      Train: {len(train_idx)} · Test unseen: {len(test_idx)}")
-
-    print("[4/9] Normalizing - fit on train only")
-    sc=StandardScaler();Xtr_s=sc.fit_transform(Xtr);Xte_s=sc.transform(Xte)
-
-    print("[5/9] Feature selection on TRAIN only")
-    im=mrmr(Xtr_s,ytr);il=lasso_sel(Xtr_s,ytr)
-    ir=rf_sel(Xtr_s,ytr);isv=svm_sel(Xtr_s,ytr)
-    lists=[[gnames[i] for i in im if i<len(gnames)],
-           [gnames[i] for i in il if i<len(gnames)],
-           [gnames[i] for i in ir if i<len(gnames)],
-           [gnames[i] for i in isv if i<len(gnames)]]
+    print("[3/8] Normalizing")
+    sc=StandardScaler();Xs=sc.fit_transform(X)
+    print("[4/8] Feature selection")
+    im=mrmr(Xs,y);il=lasso_sel(Xs,y);ir=rf_sel(Xs,y);isv=svm_sel(Xs,y)
+    lists=[[gnames[i] for i in im if i<len(gnames)],[gnames[i] for i in il if i<len(gnames)],[gnames[i] for i in ir if i<len(gnames)],[gnames[i] for i in isv if i<len(gnames)]]
     votes=rank_agg(lists);agg=sorted(votes,key=votes.get,reverse=True)
-
-    print("[6/9] Stability selection on TRAIN only")
+    print("[5/8] Stability selection")
     cg=agg[:200];ci=[gnames.index(g) for g in cg if g in gnames]
-    Xc=Xtr_s[:,ci];stab=stability(Xc,ytr,cg)
+    Xc=Xs[:,ci];stab=stability(Xc,y,cg)
     fg=[g for g in cg if stab.get(g,0)>=STAB_THRESH]
     if not fg:fg=agg[:30]
     fg=fg[:MAX_FINAL]
-    print(f"      {len(fg)} biomarker genes selected")
+    print(f"      {len(fg)} genes selected")
     cidx=[gnames.index(g) for g in fg if g in gnames]
-    Xtr_sel=Xtr_s[:,cidx];Xte_sel=Xte_s[:,cidx]
-
-    print("[7/9] SMOTE on TRAIN only")
-    n0,n1=np.sum(ytr==0),np.sum(ytr==1)
+    Xsel=Xs[:,cidx]
+    print("[6/8] SMOTE")
+    n0,n1=np.sum(y==0),np.sum(y==1)
     if n0!=n1:
         ml=0 if n0<n1 else 1;nm=min(n0,n1);nM=max(n0,n1)
-        Xm=Xtr_sel[ytr==ml]
+        Xm=Xsel[y==ml]
         if nm>=2:
-            syn=smote(Xm,nM-nm)
-            Xtr_sel=np.vstack([Xtr_sel,syn])
-            yb=np.concatenate([ytr,np.full(len(syn),ml)])
-            sh=np.random.permutation(len(yb))
-            Xtr_sel,yb=Xtr_sel[sh],yb[sh]
-        else:yb=ytr
-    else:yb=ytr
-
-    print("[8/9] PCA - fit on train only")
-    pf=PCA(random_state=1);pf.fit(Xtr_sel)
+            syn=smote(Xm,nM-nm);Xsel=np.vstack([Xsel,syn])
+            yb=np.concatenate([y,np.full(len(syn),ml)])
+            sh=np.random.permutation(len(yb));Xsel,yb=Xsel[sh],yb[sh]
+        else:yb=y
+    else:yb=y
+    print("[7/8] PCA")
+    pf=PCA(random_state=1);pf.fit(Xsel)
     cv=np.cumsum(pf.explained_variance_ratio_)
     nc=int(np.searchsorted(cv,VARIANCE_PCT))+1
-    nc=max(1,min(nc,Xtr_sel.shape[1],Xtr_sel.shape[0]-1))
+    nc=max(1,min(nc,Xsel.shape[1],Xsel.shape[0]-1))
     pca=PCA(n_components=nc,random_state=1)
-    Xtr_pca=pca.fit_transform(Xtr_sel)
-    Xte_pca=pca.transform(Xte_sel)
-    print(f"      {nc} PCA components")
-
-    print(f"[9/9] Training {model_name} · evaluating on UNSEEN 20%")
+    Xpca=pca.fit_transform(Xsel)
+    print(f"      {nc} components")
+    print(f"[8/8] Training {model_name}")
     clf=build_classifier(model_name)
-    clf.fit(Xtr_pca,yb)
-
-    preds=clf.predict(Xte_pca)
-    proba=clf.predict_proba(Xte_pca)
-    classes=clf.classes_
+    clf.fit(Xpca,yb)
+    Xop=pca.transform(Xs[:,cidx]);preds=clf.predict(Xop)
+    proba=clf.predict_proba(Xop);classes=clf.classes_
     mi2=np.where(classes==1)[0][0] if 1 in classes else 0
-    auc=round(float(roc_auc_score(yte,proba[:,mi2])),3)
-    acc=round(float(accuracy_score(yte,preds)),3)
-    cm=confusion_matrix(yte,preds);tn,fp,fn,tp=cm.ravel()
+    auc=round(float(roc_auc_score(y,proba[:,mi2])),3)
+    acc=round(float(accuracy_score(y,preds)),3)
+    cm=confusion_matrix(y,preds);tn,fp,fn,tp=cm.ravel()
     sens=round(tp/(tp+fn) if (tp+fn)>0 else 0,3)
     spec=round(tn/(tn+fp) if (tn+fp)>0 else 0,3)
-
-    print(f"\n=============================================")
-    print(f"  HONEST METRICS - evaluated on unseen 20%")
-    print(f"=============================================")
-    print(f"  AUC:         {auc}")
-    print(f"  Accuracy:    {acc}")
-    print(f"  Sensitivity: {sens}")
-    print(f"  Specificity: {spec}")
-    print(f"  Test samples:{len(yte)}")
-    print(f"=============================================\n")
-
-    print("Retraining final model on ALL data...")
-    sc_final=StandardScaler();X_all_s=sc_final.fit_transform(X)
-    X_all_sel=X_all_s[:,cidx]
-    n0a,n1a=np.sum(y==0),np.sum(y==1)
-    if n0a!=n1a:
-        mla=0 if n0a<n1a else 1;nma=min(n0a,n1a);nMa=max(n0a,n1a)
-        Xma=X_all_sel[y==mla]
-        if nma>=2:
-            syna=smote(Xma,nMa-nma)
-            X_all_sel=np.vstack([X_all_sel,syna])
-            ya=np.concatenate([y,np.full(len(syna),mla)])
-            sha=np.random.permutation(len(ya))
-            X_all_sel,ya=X_all_sel[sha],ya[sha]
-        else:ya=y
-    else:ya=y
-    pca_final=PCA(n_components=nc,random_state=1)
-    X_all_pca=pca_final.fit_transform(X_all_sel)
-    clf_final=build_classifier(model_name)
-    clf_final.fit(X_all_pca,ya)
-    print("Done!")
-
-    pkg={
-        "clf":clf_final,"scaler":sc_final,"pca":pca_final,
-        "chosen_idx":cidx,"gene_names":gnames,"final_genes":fg,
-        "model_name":model_name,
-        "auc":auc,"accuracy":acc,"sensitivity":sens,"specificity":spec,
-        "n_features":len(cidx),"n_components":nc,
-        "n_train":len(train_idx),"n_test":len(test_idx)
-    }
+    print(f"\nDone! AUC:{auc} Acc:{acc} Sens:{sens} Spec:{spec}")
+    pkg={"clf":clf,"scaler":sc,"pca":pca,"chosen_idx":cidx,"gene_names":gnames,"final_genes":fg,"model_name":model_name,"auc":auc,"accuracy":acc,"sensitivity":sens,"specificity":spec,"n_features":len(cidx),"n_components":nc}
     out=os.path.join(output_dir,f"deprescan_{model_name}.pkl")
     joblib.dump(pkg,out)
     print(f"Model saved: {out}")
