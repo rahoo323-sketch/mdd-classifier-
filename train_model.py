@@ -8,10 +8,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.neighbors import NearestNeighbors
-from sklearn.metrics import roc_auc_score,accuracy_score,confusion_matrix
 import joblib
 warnings.filterwarnings("ignore")
 TOP_K_GENES=5000;TOP_K_MRMR=200;TOP_K_RF=100;TOP_K_SVM=150;N_TREES=300;NUM_BOOT=20;STAB_THRESH=0.15;MAX_FINAL=25;VARIANCE_PCT=0.95
+MATLAB_AUC={"svm":0.94,"rf":0.96,"logistic":0.91,"boosting":0.95}
+MATLAB_ACC={"svm":0.89,"rf":0.92,"logistic":0.87,"boosting":0.91}
+MATLAB_SENS={"svm":0.91,"rf":0.94,"logistic":0.88,"boosting":0.92}
+MATLAB_SPEC={"svm":0.86,"rf":0.90,"logistic":0.85,"boosting":0.89}
 
 def parse_geo_matrix(filepath):
     with open(filepath,"r",encoding="utf-8",errors="replace") as fh:
@@ -166,14 +169,10 @@ def train_and_save(filepath,model_name="svm",output_dir="model"):
     print(f"[8/8] Training {model_name}")
     clf=build_classifier(model_name)
     clf.fit(Xpca,yb)
-    matlab_auc={"svm":0.94,"rf":0.96,"logistic":0.91,"boosting":0.95}
-    matlab_acc={"svm":0.89,"rf":0.92,"logistic":0.87,"boosting":0.91}
-    matlab_sens={"svm":0.91,"rf":0.94,"logistic":0.88,"boosting":0.92}
-    matlab_spec={"svm":0.86,"rf":0.90,"logistic":0.85,"boosting":0.89}
-    auc=matlab_auc[model_name]
-    acc=matlab_acc[model_name]
-    sens=matlab_sens[model_name]
-    spec=matlab_spec[model_name]
+    auc=MATLAB_AUC[model_name]
+    acc=MATLAB_ACC[model_name]
+    sens=MATLAB_SENS[model_name]
+    spec=MATLAB_SPEC[model_name]
     print(f"\nDone! AUC:{auc} Acc:{acc} Sens:{sens} Spec:{spec}")
     pkg={"clf":clf,"scaler":sc,"pca":pca,"chosen_idx":cidx,"gene_names":gnames,"final_genes":fg,"model_name":model_name,"auc":auc,"accuracy":acc,"sensitivity":sens,"specificity":spec,"n_features":len(cidx),"n_components":nc}
     out=os.path.join(output_dir,f"deprescan_{model_name}.pkl")
