@@ -25,10 +25,7 @@ def load_model(model_name):
         return _model_cache[model_name]
     path = os.path.join(MODEL_FOLDER, f"deprescan_{model_name}.pkl")
     if not os.path.exists(path):
-        raise FileNotFoundError(
-            f"Model '{model_name}' not found. "
-            f"Please run: python train_model.py --file GSE98793_series_matrix.txt --model {model_name}"
-        )
+        raise FileNotFoundError(f"Model '{model_name}' not found.")
     pkg = joblib.load(path)
     _model_cache[model_name] = pkg
     return pkg
@@ -36,7 +33,6 @@ def load_model(model_name):
 def parse_single_patient(filepath):
     with open(filepath, "r", encoding="utf-8", errors="replace") as fh:
         lines = fh.readlines()
-
     start = end = None
     for i, line in enumerate(lines):
         if "!series_matrix_table_begin" in line:
@@ -44,27 +40,19 @@ def parse_single_patient(filepath):
         if "!series_matrix_table_end" in line:
             end = i
             break
-
     if start is None or end is None:
         raise ValueError("Could not find !series_matrix_table_begin marker.")
-
-    expr_lines = lines[start:end]
-    content = "".join(expr_lines)
-    df = pd.read_csv(
-        io.StringIO(content), sep="\t", index_col=0,
-        na_values=["null","NULL","NA",""]
-    )
-
+    content = "".join(lines[start:end])
+    df = pd.read_csv(io.StringIO(content), sep="\t", index_col=0,
+                     na_values=["null","NULL","NA",""])
     if df.shape[1] == 0:
-        raise ValueError("No expression columns found in file.")
-
+        raise ValueError("No expression columns found.")
     series = df.iloc[:, 0]
     expr = {str(k): float(v) for k, v in series.items() if pd.notna(v)}
     return expr
 
 def classify_single_patient(filepath, model_name="svm"):
     pkg = load_model(model_name)
-
     clf         = pkg["clf"]
     scaler      = pkg["scaler"]
     pca         = pkg["pca"]
@@ -72,21 +60,16 @@ def classify_single_patient(filepath, model_name="svm"):
     gene_names  = pkg["gene_names"]
     final_genes = pkg["final_genes"]
     classes     = clf.classes_
-
     expr = parse_single_patient(filepath)
-
     X_patient = np.array([
         np.log2(max(expr.get(g, 0), 0) + 1.0)
         for g in gene_names
     ], dtype=np.float64).reshape(1, -1)
-
     X_scaled = scaler.transform(X_patient)
     X_sel = X_scaled[:, chosen_idx]
     X_pca = pca.transform(X_sel)
-
     pred  = clf.predict(X_pca)[0]
     proba = clf.predict_proba(X_pca)[0]
-
     class_list = list(classes)
     if 1 in class_list:
         mdd_prob  = float(proba[class_list.index(1)])
@@ -94,18 +77,17 @@ def classify_single_patient(filepath, model_name="svm"):
     else:
         mdd_prob  = float(proba[0]) if pred == 1 else 1.0 - float(proba[0])
         ctrl_prob = 1.0 - mdd_prob
-
     confidence = mdd_prob if pred == 1 else ctrl_prob
-
     return {
         "prediction":   "MDD" if pred == 1 else "Healthy Control",
         "label":        int(pred),
         "confidence":   round(confidence * 100, 1),
-        "auc":          pkg["auc"],
-        "sensitivity":  pkg["sensitivity"],
-        "specificity":  pkg["specificity"],
-        "n_features":   pkg["n_features"],
-        "n_components": pkg["n_components"],
+        "auc":          pkg.get("auc", 0),
+        "accuracy":     pkg.get("accuracy", 0),
+        "sensitivity":  pkg.get("sensitivity", 0),
+        "specificity":  pkg.get("specificity", 0),
+        "n_features":   pkg.get("n_features", 0),
+        "n_components": pkg.get("n_components", 0),
         "final_genes":  final_genes[:10],
         "model":        model_name,
     }
@@ -147,8 +129,8 @@ def model_status():
                 pkg = joblib.load(path)
                 status[m] = {
                     "available": True,
-                    "auc": pkg.get("auc", "—"),
-                    "acc": pkg.get("accuracy", "—")
+                    "auc":  pkg.get("auc", "—"),
+                    "acc":  pkg.get("accuracy", "—")
                 }
             except:
                 status[m] = {"available": False}
