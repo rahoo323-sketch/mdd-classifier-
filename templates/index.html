@@ -1,572 +1,341 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MDD Gene Expression Classifier · GenoMind Dx</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:              #f4f3ef;
-      --surface:         #ffffff;
-      --surface2:        #eeede9;
-      --border:          #e0ddd6;
-      --border2:         #c8c5bc;
-      --text:            #181715;
-      --text2:           #68665e;
-      --text3:           #9a9890;
-      --accent:          #1b4d3e;
-      --accent-h:        #163d31;
-      --accent-light:    #e8f2ee;
-      --accent-text:     #0e3229;
-      --danger:          #8b2020;
-      --danger-light:    #fdf0f0;
-      --danger-border:   #f0c8c8;
-      --danger-text:     #6b1818;
-      --success:         #1b4d3e;
-      --success-light:   #eef6f2;
-      --success-border:  #b0ddd0;
-      --success-text:    #0e3229;
-      --warn-bg:         #fffbf0;
-      --warn-border:     #f0e0a0;
-      --warn-text:       #665c20;
-      --shadow-sm:       0 1px 2px rgba(0,0,0,0.05);
-      --shadow:          0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.05);
-      --radius-sm:       8px;
-      --radius:          12px;
-      --radius-lg:       16px;
-    }
-
-    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
-
-    /* ── HEADER ── */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      height: 58px;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 2rem;
-      position: sticky; top: 0; z-index: 20;
-    }
-    .logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; color: var(--text); text-decoration: none; }
-    .logo-mark {
-      width: 32px; height: 32px; border-radius: 9px;
-      background: var(--accent); display: flex; align-items: center; justify-content: center;
-    }
-    .logo-mark svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .header-right { display: flex; align-items: center; gap: 10px; }
-    .pill { font-size: 11px; font-weight: 500; letter-spacing: 0.04em; padding: 3px 10px; border-radius: 20px; }
-    .pill-research { background: var(--accent-light); color: var(--accent-text); }
-    .pill-dataset  { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
-
-    /* ── MAIN ── */
-    main { max-width: 780px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
-
-    .page-eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 8px; }
-    .page-title   { font-size: 28px; font-weight: 600; line-height: 1.2; margin-bottom: 8px; }
-    .page-sub     { font-size: 15px; color: var(--text2); margin-bottom: 2.5rem; max-width: 580px; }
-
-    /* ── CARDS ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      box-shadow: var(--shadow);
-    }
-    .card-label {
-      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--text3); margin-bottom: 1rem;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .step-num {
-      width: 20px; height: 20px; border-radius: 50%;
-      background: var(--surface2); border: 1px solid var(--border);
-      font-size: 10px; font-weight: 600; color: var(--text2);
-      display: inline-flex; align-items: center; justify-content: center;
-    }
-
-    /* ── DROP ZONE ── */
-    .drop-zone {
-      border: 1.5px dashed var(--border2);
-      border-radius: var(--radius);
-      padding: 2.75rem 1.5rem;
-      text-align: center; cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-      background: var(--bg);
-    }
-    .drop-zone:hover, .drop-zone.drag-over { background: var(--accent-light); border-color: var(--accent); }
-    .drop-icon-wrap {
-      width: 56px; height: 56px; border-radius: 14px;
-      background: var(--surface); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 18px; box-shadow: var(--shadow-sm);
-    }
-    .drop-icon-wrap svg { width: 26px; height: 26px; stroke: var(--text3); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-    .drop-title { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
-    .drop-hint  { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.55; }
-    .drop-hint code { font-family: 'DM Mono', monospace; font-size: 11.5px; background: var(--surface); border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; color: var(--text); }
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: var(--accent); color: #fff; border: none;
-      border-radius: var(--radius-sm); padding: 10px 22px;
-      font-size: 13px; font-weight: 500; cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      transition: background 0.15s, transform 0.1s;
-    }
-    .btn-primary:hover { background: var(--accent-h); transform: translateY(-1px); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-primary svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-
-    /* ── FILE INFO ── */
-    .file-loaded {
-      display: flex; align-items: center; gap: 12px;
-      background: var(--success-light); border: 1px solid var(--success-border);
-      border-radius: var(--radius-sm); padding: 12px 16px; margin-top: 14px;
-    }
-    .file-loaded-icon { color: var(--success); flex-shrink: 0; }
-    .file-loaded-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-    .file-loaded-name { font-size: 14px; font-weight: 500; }
-    .file-loaded-meta { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; }
-    .file-loaded-check { margin-left: auto; color: var(--success); flex-shrink: 0; }
-    .file-loaded-check svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-    /* ── MODEL GRID ── */
-    .model-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
-    @media (max-width: 520px) { .model-grid { grid-template-columns: 1fr 1fr; } }
-    .model-card {
-      border: 1px solid var(--border); border-radius: var(--radius-sm);
-      padding: 14px 10px; text-align: center; cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      background: var(--surface); transition: all 0.12s; user-select: none;
-    }
-    .model-card:hover { background: var(--surface2); border-color: var(--border2); }
-    .model-card.active { border: 2px solid var(--accent); background: var(--accent-light); }
-    .model-card-name { font-size: 13px; font-weight: 500; color: var(--text); }
-    .model-card.active .model-card-name { color: var(--accent-text); }
-    .model-card-auc { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 3px; display: block; }
-    .model-card.active .model-card-auc { color: var(--accent); }
-
-    /* ── RUN BUTTON ── */
-    .run-btn {
-      width: 100%; padding: 14px;
-      background: var(--accent); color: #fff;
-      border: none; border-radius: var(--radius);
-      font-size: 15px; font-weight: 500; cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      display: flex; align-items: center; justify-content: center; gap: 9px;
-      transition: background 0.15s, transform 0.1s, opacity 0.15s;
-      margin-top: 1rem;
-    }
-    .run-btn:hover:not(:disabled) { background: var(--accent-h); transform: translateY(-1px); }
-    .run-btn:active:not(:disabled) { transform: translateY(0); }
-    .run-btn:disabled { background: var(--border2); color: var(--text3); cursor: not-allowed; }
-    .run-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-    /* ── PROGRESS ── */
-    .progress-card { display: none; margin-top: 1rem; }
-    .prog-step {
-      display: flex; align-items: flex-start; gap: 12px;
-      padding: 10px 0; border-bottom: 1px solid var(--border);
-      font-size: 14px; color: var(--text2);
-      transition: color 0.2s;
-    }
-    .prog-step:last-child { border-bottom: none; }
-    .prog-step.active { color: var(--text); }
-    .prog-step.done   { color: var(--text3); }
-    .step-ic { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-    .step-ic svg { width: 18px; height: 18px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .ic-wait svg   { stroke: var(--border2); }
-    .ic-active svg { stroke: #1a6bcc; }
-    .ic-done svg   { stroke: var(--success); }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spin-ring {
-      width: 18px; height: 18px; border-radius: 50%;
-      border: 2px solid rgba(26,107,204,0.2);
-      border-top-color: #1a6bcc;
-      animation: spin 0.75s linear infinite;
-      flex-shrink: 0;
-    }
-    .spin-ring-white {
-      width: 16px; height: 16px; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      animation: spin 0.75s linear infinite;
-    }
-
-    /* ── RESULT ── */
-    .result-section { display: none; margin-top: 1rem; }
-    .result-card { border-radius: var(--radius-lg); border: 1px solid; padding: 1.75rem; box-shadow: var(--shadow); }
-    .result-card.mdd     { background: var(--danger-light); border-color: var(--danger-border); }
-    .result-card.healthy { background: var(--success-light); border-color: var(--success-border); }
-    .result-top { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
-    .result-icon-circle {
-      width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center; font-size: 26px;
-    }
-    .result-icon-circle.mdd { background: #fde0e0; }
-    .result-icon-circle.healthy { background: #d8f0e8; }
-    .result-eyebrow { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 4px; }
-    .result-title { font-size: 24px; font-weight: 600; line-height: 1.15; }
-    .result-title.mdd     { color: var(--danger-text); }
-    .result-title.healthy { color: var(--success-text); }
-    .conf-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text2); margin-bottom: 7px; }
-    .conf-row strong { font-weight: 600; color: var(--text); }
-    .conf-track { height: 8px; background: rgba(0,0,0,0.08); border-radius: 6px; overflow: hidden; }
-    .conf-fill { height: 100%; border-radius: 6px; transition: width 1s cubic-bezier(.4,0,.2,1); }
-    .conf-fill.mdd     { background: var(--danger); }
-    .conf-fill.healthy { background: var(--success); }
-    .metrics-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 18px; }
-    @media (max-width: 460px) { .metrics-grid { grid-template-columns: 1fr 1fr; } }
-    .metric-box { background: rgba(255,255,255,0.6); border-radius: 10px; padding: 10px 14px; border: 1px solid rgba(0,0,0,0.06); }
-    .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
-    .metric-val   { font-size: 14px; font-weight: 500; font-family: 'DM Mono', monospace; color: var(--text); }
-    .genes-section { margin-top: 18px; }
-    .genes-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 8px; }
-    .gene-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-    .gene-tag {
-      font-size: 11.5px; font-family: 'DM Mono', monospace; font-weight: 500;
-      padding: 3px 10px; border-radius: 5px; border: 1px solid rgba(0,0,0,0.08);
-    }
-    .gene-tag.mdd     { background: #fde8e8; color: var(--danger-text); }
-    .gene-tag.healthy { background: #d8f0e8; color: var(--success-text); }
-    .error-card { background: var(--danger-light); border: 1px solid var(--danger-border); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-top: 1rem; }
-    .error-title { font-size: 14px; font-weight: 600; color: var(--danger-text); margin-bottom: 6px; }
-    .error-msg   { font-size: 13px; color: var(--danger-text); font-family: 'DM Mono', monospace; }
-
-    /* ── DISCLAIMER ── */
-    .disclaimer {
-      display: none; margin-top: 1rem;
-      background: var(--warn-bg); border: 1px solid var(--warn-border);
-      border-radius: var(--radius-sm); padding: 14px 16px;
-      font-size: 12px; color: var(--warn-text); line-height: 1.6;
-    }
-
-    /* ── PIPELINE DETAIL ── */
-    .pipeline-section {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 1.25rem 1.5rem;
-      margin-top: 1.5rem; box-shadow: var(--shadow-sm);
-    }
-    summary {
-      font-size: 13px; font-weight: 500; color: var(--text2);
-      cursor: pointer; user-select: none; list-style: none;
-      display: flex; align-items: center; gap: 8px;
-    }
-    summary::-webkit-details-marker { display: none; }
-    summary svg { width: 16px; height: 16px; stroke: var(--text3); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .chevron { margin-left: auto; transition: transform 0.2s; }
-    details[open] .chevron { transform: rotate(180deg); }
-    .pipeline-grid { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    @media (max-width: 520px) { .pipeline-grid { grid-template-columns: 1fr; } }
-    .pip-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
-    .pip-num  { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text3); margin-bottom: 4px; }
-    .pip-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
-    .pip-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
-    .pip-desc code { font-family: 'DM Mono', monospace; font-size: 11px; background: var(--surface); border: 1px solid var(--border); padding: 0px 5px; border-radius: 3px; }
-
-    /* ── FOOTER ── */
-    footer {
-      text-align: center; padding: 2rem 1rem;
-      font-size: 12px; color: var(--text3);
-      border-top: 1px solid var(--border); margin-top: 2rem;
-    }
-
-    input[type="file"] { display: none; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DepreScan · MDD Diagnostic Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;
+  --bg2:#0f1526;
+  --bg3:#151c30;
+  --surface:#1a2238;
+  --surface2:#1f2a42;
+  --border:#2a3550;
+  --border2:#3a4a6a;
+  --text:#e8edf8;
+  --text2:#8a9bbf;
+  --text3:#4a5a7a;
+  --accent:#4f8ef7;
+  --accent2:#3a7aee;
+  --accent-glow:rgba(79,142,247,0.15);
+  --teal:#2dd4bf;
+  --teal-glow:rgba(45,212,191,0.12);
+  --danger:#f87171;
+  --danger-bg:rgba(248,113,113,0.1);
+  --danger-border:rgba(248,113,113,0.3);
+  --success:#34d399;
+  --success-bg:rgba(52,211,153,0.1);
+  --success-border:rgba(52,211,153,0.3);
+  --warn:#fbbf24;
+  --warn-bg:rgba(251,191,36,0.08);
+  --warn-border:rgba(251,191,36,0.25);
+  --radius:12px;
+  --radius-lg:18px;
+  --radius-xl:24px;
+}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;overflow-x:hidden}
+.bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.18}
+.orb1{width:500px;height:500px;background:radial-gradient(circle,#4f8ef7,transparent);top:-100px;left:-100px;animation:drift1 18s ease-in-out infinite}
+.orb2{width:400px;height:400px;background:radial-gradient(circle,#2dd4bf,transparent);bottom:-80px;right:-80px;animation:drift2 22s ease-in-out infinite}
+.orb3{width:300px;height:300px;background:radial-gradient(circle,#a78bfa,transparent);top:40%;left:50%;animation:drift3 15s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,40px)}}
+@keyframes drift2{0%,100%{transform:translate(0,0)}50%{transform:translate(-50px,-30px)}}
+@keyframes drift3{0%,100%{transform:translate(-50%,-50%)}50%{transform:translate(-50%,-60%)}}
+header{position:relative;z-index:10;padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(10,14,26,0.8);backdrop-filter:blur(20px)}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#4f8ef7,#2dd4bf);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.logo-name{font-size:17px;font-weight:700;background:linear-gradient(135deg,#e8edf8,#4f8ef7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-tag{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase}
+.header-badges{display:flex;gap:8px}
+.hbadge{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500;letter-spacing:0.03em}
+.hbadge-blue{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(79,142,247,0.2)}
+.hbadge-teal{background:var(--teal-glow);color:var(--teal);border:1px solid rgba(45,212,191,0.2)}
+.hero{position:relative;z-index:5;text-align:center;padding:3.5rem 1.5rem 2.5rem}
+.hero-eyebrow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--teal);margin-bottom:14px}
+.hero-title{font-size:clamp(28px,4vw,44px);font-weight:700;line-height:1.15;margin-bottom:14px}
+.hero-title span{background:linear-gradient(135deg,#4f8ef7,#2dd4bf);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:15px;color:var(--text2);max-width:520px;margin:0 auto 2rem;line-height:1.7}
+.method-toggle{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:5px;max-width:480px;margin:0 auto 2.5rem}
+.method-btn{flex:1;padding:11px 16px;border:none;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;font-family:'Sora',sans-serif;transition:all 0.2s;color:var(--text2);background:transparent;display:flex;align-items:center;justify-content:center;gap:8px}
+.method-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.method-btn.active{background:linear-gradient(135deg,rgba(79,142,247,0.2),rgba(45,212,191,0.1));color:var(--text);border:1px solid rgba(79,142,247,0.3)}
+.method-btn:not(.active):hover{color:var(--text);background:rgba(255,255,255,0.04)}
+main{position:relative;z-index:5;max-width:720px;margin:0 auto;padding:0 1.25rem 5rem}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(79,142,247,0.3),transparent)}
+.card-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.step-dot{width:20px;height:20px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);font-size:10px;font-weight:600;color:var(--text2);display:inline-flex;align-items:center;justify-content:center}
+.drop-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.01)}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:var(--accent-glow)}
+.drop-icon-wrap{width:56px;height:56px;border-radius:16px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.drop-icon-wrap svg{width:24px;height:24px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.drop-title{font-size:15px;font-weight:600;margin-bottom:6px}
+.drop-hint{font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6}
+.drop-hint code{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface2);border:1px solid var(--border);padding:1px 7px;border-radius:4px;color:var(--teal)}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#4f8ef7,#3a7aee);color:#fff;border:none;border-radius:var(--radius);padding:11px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;transition:all 0.2s;letter-spacing:0.02em}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(79,142,247,0.3)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.file-loaded{display:flex;align-items:center;gap:12px;background:var(--success-bg);border:1px solid var(--success-border);border-radius:var(--radius);padding:12px 16px;margin-top:14px}
+.file-loaded svg{width:20px;height:20px;stroke:var(--success);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.file-loaded-name{font-size:14px;font-weight:500}
+.file-loaded-meta{font-size:12px;color:var(--text2);font-family:'JetBrains Mono',monospace}
+.file-loaded-check{margin-left:auto;flex-shrink:0}
+.file-loaded-check svg{width:20px;height:20px;stroke:var(--success);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.model-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:520px){.model-grid{grid-template-columns:1fr 1fr}}
+.model-card{border:1px solid var(--border);border-radius:var(--radius);padding:14px 10px;text-align:center;cursor:pointer;font-family:'Sora',sans-serif;background:var(--surface2);transition:all 0.15s;user-select:none}
+.model-card:hover{border-color:var(--border2);background:var(--bg3)}
+.model-card.active{border:1.5px solid var(--accent);background:rgba(79,142,247,0.08)}
+.model-card-name{font-size:12px;font-weight:600;color:var(--text)}
+.model-card.active .model-card-name{color:var(--accent)}
+.model-card-auc{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:3px;display:block}
+.model-card.active .model-card-auc{color:var(--teal)}
+.run-btn{width:100%;padding:15px;background:linear-gradient(135deg,#4f8ef7,#2dd4bf);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;display:flex;align-items:center;justify-content:center;gap:9px;transition:all 0.2s;margin-top:1rem;letter-spacing:0.02em}
+.run-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 32px rgba(79,142,247,0.25)}
+.run-btn:active:not(:disabled){transform:translateY(0)}
+.run-btn:disabled{background:var(--surface2);color:var(--text3);cursor:not-allowed;box-shadow:none}
+.run-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.progress-card{display:none;margin-top:1rem}
+.prog-step{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);transition:color 0.2s}
+.prog-step:last-child{border-bottom:none}
+.prog-step.active{color:var(--text)}
+.prog-step.done{color:var(--text3)}
+.step-ic{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.step-ic svg{width:18px;height:18px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.phq-intro{background:rgba(79,142,247,0.05);border:1px solid rgba(79,142,247,0.15);border-radius:var(--radius);padding:14px 16px;margin-bottom:1.25rem;font-size:13px;color:var(--text2);line-height:1.6}
+.phq-scale{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.scale-item{font-size:12px;padding:3px 10px;border-radius:20px;font-family:'JetBrains Mono',monospace}
+.s0{background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.2)}
+.s1{background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.2)}
+.s2{background:rgba(251,146,60,0.1);color:#fb923c;border:1px solid rgba(251,146,60,0.2)}
+.s3{background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.2)}
+.q-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:10px;transition:border-color 0.2s}
+.q-card.answered{border-color:rgba(79,142,247,0.3)}
+.q-text{font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px}
+.q-num{font-size:11px;font-weight:600;color:var(--accent);font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.options-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:500px){.options-grid{grid-template-columns:1fr 1fr}}
+.opt-btn{border:1px solid var(--border);border-radius:var(--radius);padding:10px 6px;text-align:center;cursor:pointer;font-family:'Sora',sans-serif;background:var(--surface);transition:all 0.15s;user-select:none}
+.opt-btn:hover{border-color:var(--border2);background:var(--bg3)}
+.opt-btn.selected{border:1.5px solid var(--accent);background:rgba(79,142,247,0.1)}
+.opt-score{font-size:16px;font-weight:700;color:var(--accent);display:block;margin-bottom:3px}
+.opt-btn.selected .opt-score{color:var(--teal)}
+.opt-label{font-size:11px;color:var(--text2);line-height:1.3}
+.opt-btn.selected .opt-label{color:var(--text)}
+.progress-bar-wrap{background:var(--surface2);border-radius:4px;height:4px;margin-bottom:1.25rem;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#4f8ef7,#2dd4bf);border-radius:4px;transition:width 0.4s ease}
+.submit-btn{width:100%;padding:15px;background:linear-gradient(135deg,#4f8ef7,#2dd4bf);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;display:flex;align-items:center;justify-content:center;gap:9px;transition:all 0.2s;margin-top:1rem;letter-spacing:0.02em}
+.submit-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 32px rgba(79,142,247,0.25)}
+.submit-btn:disabled{background:var(--surface2);color:var(--text3);cursor:not-allowed}
+.q-counter{font-size:13px;color:var(--text2);text-align:center;margin-bottom:12px}
+.q-counter span{color:var(--accent);font-weight:600}
+.result-section{display:none;margin-top:1rem}
+.result-card{border-radius:var(--radius-xl);padding:2rem;border:1px solid;position:relative;overflow:hidden}
+.result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.result-card.mdd{background:linear-gradient(135deg,rgba(248,113,113,0.06),rgba(248,113,113,0.02));border-color:var(--danger-border)}
+.result-card.mdd::before{background:linear-gradient(90deg,transparent,var(--danger),transparent)}
+.result-card.healthy{background:linear-gradient(135deg,rgba(52,211,153,0.06),rgba(52,211,153,0.02));border-color:var(--success-border)}
+.result-card.healthy::before{background:linear-gradient(90deg,transparent,var(--success),transparent)}
+.result-card.mild{background:linear-gradient(135deg,rgba(251,191,36,0.06),rgba(251,191,36,0.02));border-color:var(--warn-border)}
+.result-card.mild::before{background:linear-gradient(90deg,transparent,var(--warn),transparent)}
+.result-top{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.result-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.result-icon.mdd{background:rgba(248,113,113,0.12)}
+.result-icon.healthy{background:rgba(52,211,153,0.12)}
+.result-icon.mild{background:rgba(251,191,36,0.12)}
+.result-eyebrow{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:5px}
+.result-title{font-size:24px;font-weight:700;line-height:1.2}
+.result-title.mdd{color:var(--danger)}
+.result-title.healthy{color:var(--success)}
+.result-title.mild{color:var(--warn)}
+.result-sub{font-size:13px;color:var(--text2);margin-top:4px}
+.conf-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:8px}
+.conf-row strong{font-weight:600;color:var(--text)}
+.conf-track{height:8px;background:rgba(255,255,255,0.06);border-radius:6px;overflow:hidden}
+.conf-fill{height:100%;border-radius:6px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.conf-fill.mdd{background:linear-gradient(90deg,#f87171,#ef4444)}
+.conf-fill.healthy{background:linear-gradient(90deg,#34d399,#10b981)}
+.conf-fill.mild{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}
+@media(max-width:460px){.metrics-grid{grid-template-columns:1fr 1fr}}
+.metric-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.metric-label{font-size:11px;color:var(--text3);margin-bottom:4px}
+.metric-val{font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text)}
+.genes-section{margin-top:18px}
+.genes-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:10px}
+.gene-tags{display:flex;flex-wrap:wrap;gap:6px}
+.gene-tag{font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:500;padding:4px 10px;border-radius:6px;background:rgba(79,142,247,0.08);color:var(--accent);border:1px solid rgba(79,142,247,0.2)}
+.score-display{font-size:48px;font-weight:700;font-family:'JetBrains Mono',monospace;text-align:center;padding:1.5rem;background:rgba(255,255,255,0.02);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:12px}
+.score-display.mdd{color:var(--danger)}
+.score-display.healthy{color:var(--success)}
+.score-display.mild{color:var(--warn)}
+.score-sub{font-size:13px;color:var(--text2);text-align:center;margin-top:-6px;margin-bottom:14px}
+.error-card{background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-top:1rem}
+.error-title{font-size:14px;font-weight:600;color:var(--danger);margin-bottom:6px}
+.error-msg{font-size:13px;color:var(--danger);font-family:'JetBrains Mono',monospace;opacity:0.8}
+.disclaimer{display:none;margin-top:1rem;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:var(--radius);padding:14px 16px;font-size:12px;color:var(--text2);line-height:1.6}
+footer{position:relative;z-index:5;text-align:center;padding:2rem;font-size:12px;color:var(--text3);border-top:1px solid var(--border)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-ring{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;animation:spin 0.7s linear infinite;flex-shrink:0}
+input[type="file"]{display:none}
+</style>
 </head>
 <body>
-
-<!-- ── HEADER ── -->
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
 <header>
   <a class="logo" href="#">
-    <div class="logo-mark">
+    <div class="logo-icon">
       <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     </div>
-    GenoMind Dx
+    <div>
+      <div class="logo-name">DepreScan</div>
+      <div class="logo-tag">MDD Diagnostic Platform</div>
+    </div>
   </a>
-  <div class="header-right">
-    <span class="pill pill-dataset">GSE98793 · GPL570</span>
-    <span class="pill pill-research">Research Use Only</span>
+  <div class="header-badges">
+    <span class="hbadge hbadge-blue">GSE98793</span>
+    <span class="hbadge hbadge-teal">Research Use</span>
   </div>
 </header>
-
-<!-- ── MAIN ── -->
+<div class="hero">
+  <p class="hero-eyebrow">AI-Powered Depression Diagnostics</p>
+  <h1 class="hero-title">Detect MDD with <span>precision genomics</span><br>or clinical assessment</h1>
+  <p class="hero-sub">Upload a single patient's gene expression file for molecular classification, or complete the PHQ-9 questionnaire for rapid clinical screening.</p>
+  <div class="method-toggle">
+    <button class="method-btn active" onclick="switchPanel('genomic',this)">
+      <svg viewBox="0 0 24 24"><path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12z"/><path d="M12 8v4l3 3"/></svg>
+      Genomic Analysis
+    </button>
+    <button class="method-btn" onclick="switchPanel('phq',this)">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      PHQ-9 Assessment
+    </button>
+  </div>
+</div>
 <main>
-  <p class="page-eyebrow">Genomic Classifier</p>
-  <h1 class="page-title">MDD Gene Expression Classifier</h1>
-  <p class="page-sub">Upload a GEO series matrix file to classify a patient sample as Major Depressive Disorder or Healthy Control using a multi-method genomic machine learning pipeline.</p>
-
-  <!-- UPLOAD -->
-  <div class="card">
-    <p class="card-label"><span class="step-num">1</span> Gene expression file</p>
-    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-      <div class="drop-icon-wrap">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+  <div class="panel active" id="panel-genomic">
+    <div class="card">
+      <p class="card-label"><span class="step-dot">1</span> Patient gene expression file</p>
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <div class="drop-icon-wrap">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        </div>
+        <p class="drop-title">Drop the patient's .txt file here</p>
+        <p class="drop-hint">Single-patient GEO series matrix format — must contain <code>!series_matrix_table_begin</code> block</p>
+        <button class="btn-primary" onclick="event.stopPropagation();document.getElementById('file-input').click()">
+          <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          Browse file
+        </button>
       </div>
-      <p class="drop-title">Drop your .txt expression file here</p>
-      <p class="drop-hint">
-        GEO series matrix format — must contain <code>!series_matrix_table_begin</code> block<br>
-        and <code>!Sample_title</code> labels with "control" / "case" tokens
-      </p>
-      <button class="btn-primary" onclick="event.stopPropagation(); document.getElementById('file-input').click()">
-        <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-        Browse file
+      <input type="file" id="file-input" accept=".txt"/>
+      <div class="file-loaded" id="file-loaded" style="display:none">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div><p class="file-loaded-name" id="fname">—</p><p class="file-loaded-meta" id="fsize">—</p></div>
+        <span class="file-loaded-check"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
+      </div>
+    </div>
+    <div class="card">
+      <p class="card-label"><span class="step-dot">2</span> Classifier model</p>
+      <div class="model-grid">
+        <div class="model-card active" onclick="selectModel(this,'svm')"><p class="model-card-name">SVM</p><span class="model-card-auc">AUC 0.94</span></div>
+        <div class="model-card" onclick="selectModel(this,'rf')"><p class="model-card-name">Random Forest</p><span class="model-card-auc">AUC 0.96</span></div>
+        <div class="model-card" onclick="selectModel(this,'logistic')"><p class="model-card-name">Logistic</p><span class="model-card-auc">AUC 0.91</span></div>
+        <div class="model-card" onclick="selectModel(this,'boosting')"><p class="model-card-name">LogitBoost</p><span class="model-card-auc">AUC 0.95</span></div>
+      </div>
+    </div>
+    <button class="run-btn" id="run-btn" disabled onclick="runClassifier()">
+      <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Analyze Gene Expression
+    </button>
+    <div class="card progress-card" id="progress-card">
+      <p class="card-label">Pipeline running</p>
+      <div id="steps-wrap">
+        <div class="prog-step" id="ps1"><span class="step-ic"><svg viewBox="0 0 24 24" style="stroke:var(--border2)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Parsing GEO series matrix</div>
+        <div class="prog-step" id="ps2"><span class="step-ic"><svg viewBox="0 0 24 24" style="stroke:var(--border2)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Log₂ transform · variance filtering</div>
+        <div class="prog-step" id="ps3"><span class="step-ic"><svg viewBox="0 0 24 24" style="stroke:var(--border2)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Feature selection — mRMR · LASSO · RF · SVM-RFE</div>
+        <div class="prog-step" id="ps4"><span class="step-ic"><svg viewBox="0 0 24 24" style="stroke:var(--border2)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Stability selection · SMOTE balancing</div>
+        <div class="prog-step" id="ps5"><span class="step-ic"><svg viewBox="0 0 24 24" style="stroke:var(--border2)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>PCA reduction · running classifier</div>
+      </div>
+    </div>
+    <div class="result-section" id="genomic-result"></div>
+    <div class="disclaimer" id="genomic-disclaimer">⚠️ <strong>Clinical disclaimer:</strong> For research and decision-support only. Must be reviewed by a qualified clinician alongside full clinical assessment.</div>
+  </div>
+  <div class="panel" id="panel-phq">
+    <div class="card">
+      <p class="card-label">PHQ-9 Depression Screening</p>
+      <div class="phq-intro">
+        Over the <strong>past 2 weeks</strong>, how often have you been bothered by the following problems?
+        <div class="phq-scale">
+          <span class="scale-item s0">0 · Not at all</span>
+          <span class="scale-item s1">1 · Several days</span>
+          <span class="scale-item s2">2 · More than half</span>
+          <span class="scale-item s3">3 · Nearly every day</span>
+        </div>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="phq-progress" style="width:0%"></div></div>
+      <p class="q-counter">Question <span id="q-answered">0</span> of <span>9</span> answered</p>
+      <div id="phq-questions"></div>
+      <button class="submit-btn" id="submit-phq" disabled onclick="submitPHQ()">
+        <svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Submit Assessment
       </button>
     </div>
-    <input type="file" id="file-input" accept=".txt" />
-    <div class="file-loaded" id="file-loaded" style="display:none;">
-      <span class="file-loaded-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
-      <div>
-        <p class="file-loaded-name" id="fname">—</p>
-        <p class="file-loaded-meta" id="fsize">—</p>
-      </div>
-      <span class="file-loaded-check"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span>
-    </div>
+    <div class="result-section" id="phq-result"></div>
+    <div class="disclaimer" id="phq-disclaimer">⚠️ <strong>Clinical disclaimer:</strong> PHQ-9 is a screening tool only, not a diagnostic instrument. Results must be reviewed by a qualified mental health clinician.</div>
   </div>
-
-  <!-- MODEL -->
-  <div class="card">
-    <p class="card-label"><span class="step-num">2</span> Classifier model</p>
-    <div class="model-grid">
-      <div class="model-card active" onclick="selectModel(this,'svm')">
-        <p class="model-card-name">SVM</p>
-        <span class="model-card-auc">AUC 0.94</span>
-      </div>
-      <div class="model-card" onclick="selectModel(this,'rf')">
-        <p class="model-card-name">Random Forest</p>
-        <span class="model-card-auc">AUC 0.96</span>
-      </div>
-      <div class="model-card" onclick="selectModel(this,'logistic')">
-        <p class="model-card-name">Logistic Reg.</p>
-        <span class="model-card-auc">AUC 0.91</span>
-      </div>
-      <div class="model-card" onclick="selectModel(this,'boosting')">
-        <p class="model-card-name">LogitBoost</p>
-        <span class="model-card-auc">AUC 0.95</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- RUN -->
-  <button class="run-btn" id="run-btn" disabled onclick="runClassifier()">
-    <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-    Run classification
-  </button>
-
-  <!-- PROGRESS -->
-  <div class="card progress-card" id="progress-card">
-    <p class="card-label">Pipeline progress</p>
-    <div id="steps-wrap">
-      <div class="prog-step" id="ps1"><span class="step-ic ic-wait"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Parsing GEO series matrix &amp; extracting expression block</div>
-      <div class="prog-step" id="ps2"><span class="step-ic ic-wait"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Log₂ transform · variance filtering · NaN removal</div>
-      <div class="prog-step" id="ps3"><span class="step-ic ic-wait"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Feature selection — mRMR · LASSO · RF importance · SVM-RFE</div>
-      <div class="prog-step" id="ps4"><span class="step-ic ic-wait"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Rank aggregation · stability selection (50 bootstrap rounds)</div>
-      <div class="prog-step" id="ps5"><span class="step-ic ic-wait"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>SMOTE class balancing · PCA dimensionality reduction (95 % variance)</div>
-      <div class="prog-step" id="ps6"><span class="step-ic ic-wait"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>Training classifier · computing posterior probabilities</div>
-    </div>
-  </div>
-
-  <!-- RESULT -->
-  <div class="result-section" id="result-section"></div>
-
-  <!-- DISCLAIMER -->
-  <div class="disclaimer" id="disclaimer">
-    ⚠️ <strong>Clinical disclaimer:</strong> This tool is for research and decision-support use only.
-    Results must be reviewed by a qualified clinician alongside full clinical assessment, patient history,
-    and validated diagnostic criteria. Not approved for standalone diagnostic use.
-  </div>
-
-  <!-- PIPELINE INFO -->
-  <details class="pipeline-section">
-    <summary>
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-      About the pipeline
-      <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-    </summary>
-    <div class="pipeline-grid">
-      <div class="pip-item"><p class="pip-num">01</p><p class="pip-name">Data loading</p><p class="pip-desc">GEO series matrix parsed; <code>log₂(x+1)</code> transform; top 5,000 high-variance probes retained.</p></div>
-      <div class="pip-item"><p class="pip-num">02</p><p class="pip-name">Label extraction</p><p class="pip-desc">Sample titles parsed from <code>!Sample_title</code>; "control" → 0, "case" → 1; 80/20 stratified split.</p></div>
-      <div class="pip-item"><p class="pip-num">03</p><p class="pip-name">Feature selection</p><p class="pip-desc">mRMR (top 200) · LASSO-CV · RF importance (top 100) · SVM linear weights (top 150).</p></div>
-      <div class="pip-item"><p class="pip-num">04</p><p class="pip-name">Rank aggregation</p><p class="pip-desc">Voting across all four methods; genes scored by number of lists they appear in.</p></div>
-      <div class="pip-item"><p class="pip-num">05</p><p class="pip-name">Stability selection</p><p class="pip-desc">50 bootstrap rounds; genes with stability ≥ 0.15 kept; panel capped at 25 biomarkers.</p></div>
-      <div class="pip-item"><p class="pip-num">06</p><p class="pip-name">SMOTE + PCA</p><p class="pip-desc">Minority class oversampled via k-NN interpolation; PCA retains components at 95 % variance.</p></div>
-      <div class="pip-item"><p class="pip-num">07</p><p class="pip-name">Classifiers</p><p class="pip-desc">SVM (linear, Platt scaling) · RF (200 trees) · Logistic Regression · GradientBoost (150 cycles).</p></div>
-      <div class="pip-item"><p class="pip-num">08</p><p class="pip-name">Output</p><p class="pip-desc">Majority vote across test samples; posterior probability as confidence; AUC, sensitivity, specificity reported.</p></div>
-    </div>
-  </details>
 </main>
-
-<footer>GenoMind Dx · GSE98793 / GPL570 pipeline · For research use only</footer>
-
+<footer>DepreScan · GSE98793 / GPL570 · PHQ-9 Clinical Screening · For research use only</footer>
 <script>
-  // ── CONFIG ──
-  // When deployed, this points to your live backend URL.
-  // For local testing: "http://localhost:5000"
-  const API_BASE = window.location.origin;
-
-  let selectedModel = 'svm';
-  let loadedFile = null;
-
-  const modelNames = {
-    svm:      'SVM (linear + Platt)',
-    rf:       'Random Forest (200 trees)',
-    logistic: 'Logistic Regression',
-    boosting: 'GradientBoost Ensemble'
-  };
-
-  // ── FILE HANDLING ──
-  const fileInput = document.getElementById('file-input');
-  const dz        = document.getElementById('drop-zone');
-
-  fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
-  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
-  dz.addEventListener('dragleave', ()  => dz.classList.remove('drag-over'));
-  dz.addEventListener('drop', e => {
-    e.preventDefault(); dz.classList.remove('drag-over');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-  });
-
-  function handleFile(f) {
-    if (!f.name.endsWith('.txt')) {
-      alert('Please upload a .txt GEO series matrix file.');
-      return;
-    }
-    loadedFile = f;
-    document.getElementById('fname').textContent = f.name;
-    document.getElementById('fsize').textContent = `${(f.size/1024).toFixed(1)} KB · text/plain`;
-    document.getElementById('file-loaded').style.display = 'flex';
-    document.getElementById('run-btn').disabled = false;
-    resetUI();
-  }
-
-  function selectModel(el, name) {
-    document.querySelectorAll('.model-card').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-    selectedModel = name;
-  }
-
-  // ── STEP ICONS ──
-  const WAIT_IC   = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--border2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
-  const DONE_IC   = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--success);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
-  const SPIN_IC   = `<div class="spin-ring"></div>`;
-
-  function setStepWait(id)   { const el=document.getElementById(id); el.className='prog-step'; el.querySelector('.step-ic').innerHTML=WAIT_IC; }
-  function setStepActive(id) { const el=document.getElementById(id); el.className='prog-step active'; el.querySelector('.step-ic').innerHTML=SPIN_IC; }
-  function setStepDone(id)   { const el=document.getElementById(id); el.className='prog-step done'; el.querySelector('.step-ic').innerHTML=DONE_IC; }
-
-  function resetUI() {
-    document.getElementById('result-section').style.display = 'none';
-    document.getElementById('disclaimer').style.display = 'none';
-    document.getElementById('progress-card').style.display = 'none';
-    for (let i=1;i<=6;i++) setStepWait('ps'+i);
-  }
-
-  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-  // ── RUN ──
-  async function runClassifier() {
-    if (!loadedFile) return;
-    resetUI();
-
-    const btn = document.getElementById('run-btn');
-    btn.disabled = true;
-    btn.innerHTML = `<div class="spin-ring-white"></div> Uploading &amp; processing…`;
-
-    document.getElementById('progress-card').style.display = 'block';
-
-    // Animate steps while server processes
-    const stepLabels = ['ps1','ps2','ps3','ps4','ps5','ps6'];
-    const delays     = [800, 700, 1200, 900, 700, 600];
-
-    // Start animation loop (non-blocking)
-    let stepIdx = 0;
-    async function advanceSteps() {
-      for (let i = 0; i < stepLabels.length; i++) {
-        if (i > 0) setStepDone(stepLabels[i-1]);
-        setStepActive(stepLabels[i]);
-        await delay(delays[i]);
-      }
-    }
-    const animPromise = advanceSteps();
-
-    // Actual API call
-    const formData = new FormData();
-    formData.append('file',  loadedFile);
-    formData.append('model', selectedModel);
-
-    let result = null;
-    let errorMsg = null;
-
-    try {
-      const resp = await fetch(`${API_BASE}/classify`, { method: 'POST', body: formData });
-      const data = await resp.json();
-      if (!resp.ok || data.error) {
-        errorMsg = data.error || 'Server error';
-      } else {
-        result = data;
-      }
-    } catch(e) {
-      errorMsg = 'Could not reach the server. Is the backend running?';
-    }
-
-    // Wait for animation to finish
-    await animPromise;
-    for (let i = 0; i < stepLabels.length; i++) setStepDone(stepLabels[i]);
-
-    const rs = document.getElementById('result-section');
-    rs.style.display = 'block';
-
-    if (errorMsg) {
-      rs.innerHTML = `
-        <div class="error-card">
-          <p class="error-title">Classification failed</p>
-          <p class="error-msg">${errorMsg}</p>
-        </div>`;
-    } else {
-      const cls     = result.label === 1 ? 'mdd' : 'healthy';
-      const emoji   = result.label === 1 ? '🧠' : '✅';
-      const geneTags = (result.final_genes || []).map(g =>
-        `<span class="gene-tag ${cls}">${g}</span>`).join('');
-
-      rs.innerHTML = `
-        <div class="result-card ${cls}">
-          <div class="result-top">
-            <div class="result-icon-circle ${cls}">${emoji}</div>
-            <div>
-              <p class="result-eyebrow">Classification result</p>
-              <p class="result-title ${cls}">${result.prediction}</p>
-            </div>
-          </div>
-          <div class="conf-row"><span>Model confidence</span><strong>${result.confidence}%</strong></div>
-          <div class="conf-track"><div class="conf-fill ${cls}" id="conf-fill" style="width:0%"></div></div>
-          <div class="metrics-grid">
-            <div class="metric-box"><p class="metric-label">Model</p><p class="metric-val">${modelNames[result.model]}</p></div>
-            <div class="metric-box"><p class="metric-label">AUC (test set)</p><p class="metric-val">${result.auc}</p></div>
-            <div class="metric-box"><p class="metric-label">Biomarker genes</p><p class="metric-val">${result.n_features} features</p></div>
-            <div class="metric-box"><p class="metric-label">Sensitivity</p><p class="metric-val">${result.sensitivity}</p></div>
-            <div class="metric-box"><p class="metric-label">Specificity</p><p class="metric-val">${result.specificity}</p></div>
-            <div class="metric-box"><p class="metric-label">PCA components</p><p class="metric-val">${result.n_components}</p></div>
-          </div>
-          ${geneTags ? `<div class="genes-section"><p class="genes-label">Top selected biomarkers</p><div class="gene-tags">${geneTags}</div></div>` : ''}
-        </div>`;
-
-      setTimeout(() => {
-        const fill = document.getElementById('conf-fill');
-        if (fill) fill.style.width = result.confidence + '%';
-      }, 100);
-
-      document.getElementById('disclaimer').style.display = 'block';
-    }
-
-    btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg> Run again`;
-    btn.disabled = false;
-  }
+const API_BASE = window.location.origin;
+let selectedModel = 'svm';
+let loadedFile = null;
+const phqAnswers = new Array(9).fill(null);
+const phqQuestions = [
+  "Little interest or pleasure in doing things",
+  "Feeling down, depressed, or hopeless",
+  "Trouble falling or staying asleep, or sleeping too much",
+  "Feeling tired or having little energy",
+  "Poor appetite or overeating",
+  "Feeling bad about yourself — or that you are a failure",
+  "Trouble concentrating on things",
+  "Moving or speaking so slowly that other people could have noticed — or being fidgety or restless",
+  "Thoughts that you would be better off dead, or thoughts of hurting yourself"
+];
+const modelNames = {svm:'SVM (linear + Platt)',rf:'Random Forest (200 trees)',logistic:'Logistic Regression',boosting:'GradientBoost Ensemble'};
+function switchPanel(name,btn){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.method-btn').forEach(b=>b.classList.remove('active'));document.getElementById('panel-'+name).classList.add('active');btn.classList.add('active');}
+const fileInput=document.getElementById('file-input');
+const dz=document.getElementById('drop-zone');
+fileInput.addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);});
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+function handleFile(f){if(!f.name.endsWith('.txt')){alert('Please upload a .txt GEO series matrix file.');return;}loadedFile=f;document.getElementById('fname').textContent=f.name;document.getElementById('fsize').textContent=(f.size/1024).toFixed(1)+' KB';document.getElementById('file-loaded').style.display='flex';document.getElementById('run-btn').disabled=false;document.getElementById('genomic-result').style.display='none';document.getElementById('genomic-disclaimer').style.display='none';document.getElementById('progress-card').style.display='none';}
+function selectModel(el,name){document.querySelectorAll('.model-card').forEach(c=>c.classList.remove('active'));el.classList.add('active');selectedModel=name;}
+function buildPHQ(){const container=document.getElementById('phq-questions');container.innerHTML='';phqQuestions.forEach((q,i)=>{const card=document.createElement('div');card.className='q-card';card.id='qcard-'+i;card.innerHTML=`<p class="q-num">Q${i+1}</p><p class="q-text">${q}</p><div class="options-grid">${[0,1,2,3].map(v=>`<div class="opt-btn" onclick="selectAnswer(${i},${v},this)"><span class="opt-score">${v}</span><span class="opt-label">${['Not at all','Several days','More than half','Nearly every day'][v]}</span></div>`).join('')}</div>`;container.appendChild(card);});}
+function selectAnswer(qIdx,val,el){phqAnswers[qIdx]=val;const card=document.getElementById('qcard-'+qIdx);card.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');card.classList.add('answered');const answered=phqAnswers.filter(a=>a!==null).length;document.getElementById('q-answered').textContent=answered;document.getElementById('phq-progress').style.width=(answered/9*100)+'%';document.getElementById('submit-phq').disabled=answered<9;}
+function submitPHQ(){const total=phqAnswers.reduce((a,b)=>a+b,0);let cls,label,emoji,sub;if(total<=4){cls='healthy';label='Minimal / No Depression';emoji='✅';sub='PHQ-9 score suggests no clinically significant depression.';}else if(total<=9){cls='mild';label='Mild Depression';emoji='🟡';sub='PHQ-9 score suggests mild depressive symptoms.';}else if(total<=14){cls='mild';label='Moderate Depression';emoji='⚠️';sub='PHQ-9 score suggests moderate depression. Clinical review recommended.';}else if(total<=19){cls='mild';label='Moderately Severe';emoji='🔶';sub='PHQ-9 score suggests moderately severe depression. Prompt clinical evaluation advised.';}else{cls='mdd';label='Severe Depression';emoji='🔴';sub='PHQ-9 score suggests severe depression. Immediate clinical attention recommended.';}const isMDD=total>=10;const conf=Math.round(50+(total/27)*45);const rs=document.getElementById('phq-result');rs.style.display='block';rs.innerHTML=`<div class="result-card ${cls}"><div class="result-top"><div class="result-icon ${cls}">${emoji}</div><div><p class="result-eyebrow">PHQ-9 Result</p><p class="result-title ${cls}">${label}</p><p class="result-sub">${sub}</p></div></div><div class="score-display ${cls}">${total}<span style="font-size:18px;opacity:0.5"> / 27</span></div><p class="score-sub">Total PHQ-9 Score</p><div class="conf-row"><span>Severity confidence</span><strong>${conf}%</strong></div><div class="conf-track"><div class="conf-fill ${cls}" id="phq-fill" style="width:0%"></div></div><div class="metrics-grid"><div class="metric-box"><p class="metric-label">Score</p><p class="metric-val">${total} / 27</p></div><div class="metric-box"><p class="metric-label">MDD indicator</p><p class="metric-val">${isMDD?'Positive':'Negative'}</p></div><div class="metric-box"><p class="metric-label">Severity range</p><p class="metric-val">${total<=4?'0–4':total<=9?'5–9':total<=14?'10–14':total<=19?'15–19':'20–27'}</p></div></div></div>`;setTimeout(()=>{const f=document.getElementById('phq-fill');if(f)f.style.width=conf+'%';},100);document.getElementById('phq-disclaimer').style.display='block';rs.scrollIntoView({behavior:'smooth',block:'nearest'});}
+const WAIT_IC=`<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--border2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+const DONE_IC=`<svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:none;stroke:var(--success);stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+const SPIN_IC=`<div class="spin-ring"></div>`;
+function setStepWait(id){const e=document.getElementById(id);e.className='prog-step';e.querySelector('.step-ic').innerHTML=WAIT_IC;}
+function setStepActive(id){const e=document.getElementById(id);e.className='prog-step active';e.querySelector('.step-ic').innerHTML=SPIN_IC;}
+function setStepDone(id){const e=document.getElementById(id);e.className='prog-step done';e.querySelector('.step-ic').innerHTML=DONE_IC;}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+async function runClassifier(){if(!loadedFile)return;const btn=document.getElementById('run-btn');btn.disabled=true;btn.innerHTML=`<div class="spin-ring"></div> Analyzing…`;const prog=document.getElementById('progress-card');prog.style.display='block';for(let i=1;i<=5;i++)setStepWait('ps'+i);document.getElementById('genomic-result').style.display='none';document.getElementById('genomic-disclaimer').style.display='none';const timings=[900,750,1400,900,700];async function animSteps(){for(let i=0;i<5;i++){if(i>0)setStepDone('ps'+i);setStepActive('ps'+(i+1));await delay(timings[i]);}}const animP=animSteps();const fd=new FormData();fd.append('file',loadedFile);fd.append('model',selectedModel);let result=null,errorMsg=null;try{const resp=await fetch(`${API_BASE}/classify`,{method:'POST',body:fd});const data=await resp.json();if(!resp.ok||data.error)errorMsg=data.error||'Server error';else result=data;}catch(e){errorMsg='Could not reach the server. Is the backend running?';}await animP;for(let i=1;i<=5;i++)setStepDone('ps'+i);const rs=document.getElementById('genomic-result');rs.style.display='block';if(errorMsg){rs.innerHTML=`<div class="error-card"><p class="error-title">Classification failed</p><p class="error-msg">${errorMsg}</p></div>`;}else{const cls=result.label===1?'mdd':'healthy';const emoji=result.label===1?'🧠':'✅';const geneTags=(result.final_genes||[]).map(g=>`<span class="gene-tag">${g}</span>`).join('');rs.innerHTML=`<div class="result-card ${cls}"><div class="result-top"><div class="result-icon ${cls}">${emoji}</div><div><p class="result-eyebrow">Genomic Classification</p><p class="result-title ${cls}">${result.prediction}</p><p class="result-sub">Based on ${result.n_features} biomarker genes · ${modelNames[result.model]}</p></div></div><div class="conf-row"><span>Model confidence</span><strong>${result.confidence}%</strong></div><div class="conf-track"><div class="conf-fill ${cls}" id="conf-fill" style="width:0%"></div></div><div class="metrics-grid"><div class="metric-box"><p class="metric-label">AUC</p><p class="metric-val">${result.auc}</p></div><div class="metric-box"><p class="metric-label">Sensitivity</p><p class="metric-val">${result.sensitivity}</p></div><div class="metric-box"><p class="metric-label">Specificity</p><p class="metric-val">${result.specificity}</p></div><div class="metric-box"><p class="metric-label">Genes used</p><p class="metric-val">${result.n_features}</p></div><div class="metric-box"><p class="metric-label">PCA components</p><p class="metric-val">${result.n_components}</p></div><div class="metric-box"><p class="metric-label">Samples parsed</p><p class="metric-val">${result.n_samples}</p></div></div>${geneTags?`<div class="genes-section"><p class="genes-label">Top biomarker genes</p><div class="gene-tags">${geneTags}</div></div>`:''}</div>`;setTimeout(()=>{const f=document.getElementById('conf-fill');if(f)f.style.width=result.confidence+'%';},100);document.getElementById('genomic-disclaimer').style.display='block';}btn.innerHTML=`<svg viewBox="0 0 24 24" style="width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg> Analyze Again`;btn.disabled=false;rs.scrollIntoView({behavior:'smooth',block:'nearest'});}
+buildPHQ();
 </script>
 </body>
 </html>
