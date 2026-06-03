@@ -327,10 +327,10 @@ footer{position:relative;z-index:5;text-align:center;padding:1.5rem;font-size:11
       <div class="card">
         <p class="card-label"><span class="step-dot">2</span> Classifier model</p>
         <div class="model-grid" id="model-grid">
-          <div class="model-card active" onclick="selectModel(this,'svm')"><p class="model-card-name">SVM</p><span class="model-card-auc" id="auc-svm">AUC 0.94</span></div>
-          <div class="model-card" onclick="selectModel(this,'rf')"><p class="model-card-name">Random Forest</p><span class="model-card-auc" id="auc-rf">AUC 0.96</span></div>
-          <div class="model-card" onclick="selectModel(this,'logistic')"><p class="model-card-name">Logistic</p><span class="model-card-auc" id="auc-logistic">AUC 0.91</span></div>
-          <div class="model-card" onclick="selectModel(this,'boosting')"><p class="model-card-name">LogitBoost</p><span class="model-card-auc" id="auc-boosting">AUC 0.95</span></div>
+          <div class="model-card active" onclick="selectModel(this,'svm')"><p class="model-card-name">SVM</p><span class="model-card-auc" id="auc-svm">AUC 0.731</span></div>
+          <div class="model-card" onclick="selectModel(this,'rf')"><p class="model-card-name">Random Forest</p><span class="model-card-auc" id="auc-rf">AUC 0.620</span></div>
+          <div class="model-card" onclick="selectModel(this,'logistic')"><p class="model-card-name">Logistic</p><span class="model-card-auc" id="auc-logistic">AUC 0.722</span></div>
+          <div class="model-card" onclick="selectModel(this,'boosting')"><p class="model-card-name">LogitBoost</p><span class="model-card-auc" id="auc-boosting">AUC 0.669</span></div>
         </div>
       </div>
       <button class="run-btn" id="run-btn" disabled onclick="runClassifier()"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>Analyze Gene Expression</button>
