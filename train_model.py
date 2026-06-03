@@ -118,7 +118,7 @@ def smote(Xm,n,k=5):
 def build_classifier(model_name):
     if model_name=="svm":return SVC(kernel="linear",probability=True,random_state=1)
     elif model_name=="rf":return RandomForestClassifier(n_estimators=200,random_state=1,n_jobs=-1)
-    elif model_name=="logistic":return LogisticRegression(max_iter=2000,random_state=1,solver='lbfgs')
+    elif model_name=="logistic":return LogisticRegression(max_iter=5000,random_state=1,solver='saga',penalty='l2')
     elif model_name=="boosting":return GradientBoostingClassifier(n_estimators=150,max_depth=3,random_state=1)
 
 def train_and_save(filepath,model_name="svm",output_dir="model"):
