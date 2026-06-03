@@ -82,12 +82,7 @@ def classify_single_patient(filepath, model_name="svm"):
         "prediction":   "MDD" if pred == 1 else "Healthy Control",
         "label":        int(pred),
         "confidence":   round(confidence * 100, 1),
-        "auc":          pkg.get("auc", 0),
-        "accuracy":     pkg.get("accuracy", 0),
-        "sensitivity":  pkg.get("sensitivity", 0),
-        "specificity":  pkg.get("specificity", 0),
         "n_features":   19,
-        "n_components": pkg.get("n_components", 0),
         "final_genes":  final_genes[:10],
         "model":        model_name,
     }
